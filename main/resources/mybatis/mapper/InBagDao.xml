@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="com.study.springboot.goods.dao.InBagDao">	
+	<!-- 장바구니 : 같은 품목 있으면 update 없으면 insert -->
+	<update id="addBag">
+		merge into BC_BASKET using dual 
+			on (BCM_NUM = #{param1} and BCG_KEY = #{param2} and BCD_DETAILKEY = #{param3})
+			when matched then 
+				update set BCB_COUNT = BCB_COUNT + #{param4}
+			when not matched then 
+				insert (BCM_NUM, BCG_KEY, BCD_DETAILKEY, BCB_DATE, BCB_COUNT)	
+					values (#{param1}, #{param2}, #{param3}, sysdate, #{param4})				
+	</update>
+</mapper>

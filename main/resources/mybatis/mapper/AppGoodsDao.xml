@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.study.springboot.member.dao.wjapp.AppGoodsDao">
+    <select id="goodsListView" resultType="com.study.springboot.goods.dto.GoodsDto">
+        SELECT * FROM BC_GOODS ORDER BY BCG_KEY DESC
+    </select>
+    <select id="goodsSkinCareListview" resultType="com.study.springboot.goods.dto.GoodsDto">
+        SELECT * FROM BC_GOODS WHERE BCG_CATEGORY ='skincare' ORDER BY BCG_KEY DESC
+    </select>
+    <select id="goodsPointListview" resultType="com.study.springboot.goods.dto.GoodsDto">
+        SELECT * FROM BC_GOODS WHERE BCG_CATEGORY ='point' ORDER BY BCG_KEY DESC
+    </select>
+    <select id="goodsBaseListview" resultType="com.study.springboot.goods.dto.GoodsDto">
+        SELECT * FROM BC_GOODS WHERE BCG_CATEGORY ='base' ORDER BY BCG_KEY DESC
+    </select>
+    <select id="goodsSelectOne" resultType="com.study.springboot.goods.dto.GoodsDto">
+        SELECT * FROM BC_GOODS WHERE BCG_KEY = #{param1}
+    </select>
+    <select id="goodsDetail" resultType="com.study.springboot.goods.dto.GoodsDetailDto">
+        SELECT * FROM BC_DETAILGOODS WHERE BCG_KEY = #{param1}
+    </select>
+    <update id="goodsFavoriteUp">
+        UPDATE BC_GOODS SET BCG_LIKE = BCG_LIKE + 1 WHERE BCG_KEY = #{param1}
+    </update>
+    <update id="goodsFavoriteDown">
+        UPDATE BC_GOODS SET BCG_LIKE = BCG_LIKE - 1 WHERE BCG_KEY = #{param1}
+    </update>
+    <select id="likeList" resultType="com.study.springboot.member.dto.Like">
+        SELECT * FROM BC_LIKE WHERE BCM_NUM = #{param1}
+    </select>
+    <insert id="memberFavoriteUp">
+        insert into BC_LIKE values (#{param1} , #{param2} , sysdate )
+    </insert>
+    <delete id="memberFavoriteDown">
+        delete from BC_LIKE where BCM_NUM = #{param1} and BCG_KEY = #{param2}
+    </delete>
+    <select id="UserGoodsJoinLikelist" resultType="com.study.springboot.goods.dto.GoodsJoinLikes">
+        SELECT D.*
+        FROM BC_LIKE C, BC_GOODS D
+        WHERE C.BCG_KEY = D.BCG_KEY
+          AND C.BCM_NUM = #{param1}
+        ORDER BY C.BCL_DATE DESC
+    </select>
+    <select id="seaching" resultType="com.study.springboot.goods.dto.GoodsDto">
+        SELECT BCG_NAME
+        FROM BC_GOODS
+        WHERE BCG_NAME LIKE #{param1}
+        ORDER BY BCG_DATE DESC
+    </select>
+    <select id="seachSubmitted" resultType="com.study.springboot.goods.dto.GoodsDto">
+        SELECT *
+        FROM BC_GOODS
+        WHERE BCG_NAME LIKE #{param1}
+        ORDER BY BCG_KEY DESC
+    </select>
+    <select id="reviewList" resultType="com.study.springboot.goods.dto.ReviewDto">
+        SELECT *
+        FROM BC_REVIEW
+        WHERE BCG_KEY = #{param1}
+        ORDER BY BCR_DATE DESC
+    </select>
+    <update id="updateFcmToken">
+        update BC_MEMBER set BCM_FCM_TOKEN = #{param1} where BCM_NUM = #{param2}
+    </update>
+</mapper>

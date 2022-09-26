@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.springboot.member.dao.MemberDao">
+    <insert id="join">
+        INSERT INTO BC_MEMBER
+            (BCM_NUM , BCM_ID , BCM_PW , BCM_NAME , BCM_EMAIL, BCM_GOOGLEID, BCM_NAVERID, BCM_KAKAOID, BCM_FACEBOOKID,
+             BCM_ZIPCODE,BCM_ADDRESS1,BCM_ADDRESS2,BCM_ADDRESS3,BCM_PHONENUM1,BCM_PHONENUM2,BCM_PHONENUM3,
+             BCM_AUTHORITY,BCM_ENABLE,BCM_JOINED_ON,BCM_STOPDATE)
+            VALUES ( BCM_NUM_SEQ.NEXTVAL , #{param1} , #{param2} , #{param3} , #{param4} , '','','','','','','','','','',
+                    '','role_user','true',SYSDATE,SYSDATE)
+    </insert>
+    <select id="userCheck" resultType="com.study.springboot.member.dto.MemberDto">
+        SELECT * FROM BC_MEMBER WHERE BCM_ID = #{param1}
+    </select>
+    <select id="selectUser" resultType="com.study.springboot.member.dto.MemberDto">
+        SELECT * FROM BC_MEMBER WHERE BCM_NUM = #{param1}
+    </select>
+    <select id="orderDeliveryView" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+        SELECT * FROM (SELECT ROWNUM NUM, A.* FROM
+                      (SELECT * FROM BC_ORDER_HISTORY WHERE BCM_NUM = #{param1}
+                                AND
+                                (BCO_ORDER_STATUS = '배송준비중'
+                                OR BCO_ORDER_STATUS = '배송중'
+                                OR BCO_ORDER_STATUS = '배송완료'
+                                OR BCO_ORDER_STATUS = '구매확정')
+                                ORDER BY BCO_ORDERDATE DESC ) A
+                                WHERE ROWNUM &lt;= #{param2} ) B WHERE B.NUM &gt;= #{param3}
+    </select>
+    <select id="articlePage" resultType="_int">
+        SELECT COUNT(*) AS TOTAL FROM BC_ORDER_HISTORY WHERE BCM_NUM = #{param1}
+                                                       AND (BCO_ORDER_STATUS = '배송준비중'
+                                                       OR BCO_ORDER_STATUS = '배송중'
+                                                       OR BCO_ORDER_STATUS = '배송완료'
+                                                       OR BCO_ORDER_STATUS = '구매확정')
+    </select>
+    <update id="cancellationRequest">
+        UPDATE BC_ORDER_HISTORY SET BCO_ORDER_STATUS = '취소신청', BCO_STATUSDATE = SYSDATE
+                                WHERE BCM_NUM = #{param1} AND BCO_ORDERNUM = #{param2}
+    </update>
+    <update id="exchangeRequest">
+        UPDATE BC_ORDER_HISTORY SET BCO_ORDER_STATUS = '교환신청', BCO_STATUSDATE = SYSDATE
+                                WHERE BCM_NUM = #{param1} AND BCO_ORDERNUM = #{param2}
+    </update>
+    <update id="refundRequest">
+        UPDATE BC_ORDER_HISTORY SET BCO_ORDER_STATUS = '반품신청', BCO_STATUSDATE = SYSDATE
+                                WHERE BCM_NUM = #{param1} AND BCO_ORDERNUM = #{param2}
+    </update>
+    <update id="purchaseConfirmation">
+        UPDATE BC_ORDER_HISTORY
+        SET BCO_ORDER_STATUS = '구매확정', BCO_STATUSDATE = SYSDATE
+        WHERE BCM_NUM = #{param1}
+        AND BCO_ORDERNUM = #{param2}
+    </update>
+    <select id="cancelExchangeRefund" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+        <!--현재 order by 주문번호인데 나중에 상태변화날짜로 바꿔줄것-->
+        SELECT * FROM (SELECT ROWNUM NUM, A.* FROM
+        (SELECT * FROM BC_ORDER_HISTORY WHERE BCM_NUM = #{param1}
+                    AND
+                    (BCO_ORDER_STATUS = '취소신청'
+                    OR BCO_ORDER_STATUS = '취소완료'
+                    OR BCO_ORDER_STATUS = '교환신청'
+                    OR BCO_ORDER_STATUS = '교환상품회수중'
+                    OR BCO_ORDER_STATUS = '교환완료'
+                    OR BCO_ORDER_STATUS = '반품신청'
+                    OR BCO_ORDER_STATUS = '반품회수중'
+                    OR BCO_ORDER_STATUS = '반품완료')
+                    ORDER BY BCO_ORDERDATE DESC ) A
+                    WHERE ROWNUM &lt;= #{param2} ) B WHERE B.NUM &gt;= #{param3}
+    </select>
+    <select id="articlePage2" resultType="_int">
+        SELECT COUNT(*) AS TOTAL
+        FROM BC_ORDER_HISTORY
+        WHERE BCM_NUM = #{param1} and (BCO_ORDER_STATUS = '취소신청'
+          OR BCO_ORDER_STATUS = '취소완료'
+          OR BCO_ORDER_STATUS = '교환신청'
+          OR BCO_ORDER_STATUS = '교환상품회수중'
+          OR BCO_ORDER_STATUS = '교환완료'
+          OR BCO_ORDER_STATUS = '반품신청'
+          OR BCO_ORDER_STATUS = '반품회수중'
+          OR BCO_ORDER_STATUS = '반품완료')
+    </select>
+    <update id="modifyMember">
+        UPDATE BC_MEMBER
+        SET BCM_EMAIL = #{param1},
+             BCM_PHONENUM1 = #{param2},
+             BCM_PHONENUM2 = #{param3},
+             BCM_PHONENUM3 = #{param4},
+             BCM_ZIPCODE = #{param5},
+             BCM_ADDRESS1 = #{param6},
+             BCM_ADDRESS2 = #{param7},
+             BCM_ADDRESS3 = #{param8}
+        WHERE BCM_NUM= #{param9}
+    </update>
+    <select id="basketListView" resultType="com.study.springboot.member.dto.GoodsJoinBasketJoinGoodDetailDto" >
+        SELECT
+            A.BCG_KEY as bcg_key,
+            A.BCG_CATEGORY as bcg_category,
+            A.BCG_NAME as bcg_name,
+            A.BCG_PRICE as bcg_price,
+            A.BCG_DATE as bcg_date,
+            A.BCG_STOCK as bcg_stock,
+            A.BCG_SALE as bcg_sale,
+            A.BCG_LIKE as bcg_like,
+            A.BCG_IMG as bcg_img,
+            A.BCG_IMGDETAIL as bcg_imgdetail,
+            A.BCG_INFO as bcg_info,
+            A.BCG_DISCOUNT as bcg_discount,
+            A.BCG_MDPICK as bcg_mdpick,
+            B.BCM_NUM as bcm_num,
+            B.BCD_DETAILKEY as bcd_detailkey,
+            B.BCB_DATE as bcb_date,
+            B.BCB_COUNT as bcb_count,
+            C.BCD_OPTION as bcd_option,
+            C.BCD_STOCK as bcd_stock
+        FROM BC_GOODS A, BC_BASKET B , BC_DETAILGOODS C
+        WHERE B.BCM_NUM = #{param1}
+          AND A.BCG_KEY = B.BCG_KEY
+          AND B.BCD_DETAILKEY=C.BCD_DETAILKEY
+          AND A.BCG_KEY = C.BCG_KEY
+        ORDER BY B.BCB_DATE DESC
+    </select>
+    <delete id="deleteBasket">
+        DELETE FROM BC_BASKET
+               WHERE BCM_NUM = #{param1}
+                 AND BCG_KEY = #{param2}
+                 AND BCD_DETAILKEY = #{param3}
+    </delete>
+    <select id="orderCheck" resultType="com.study.springboot.member.dto.GoodsJoinDetailGoodsDto">
+        SELECT
+            A.BCG_KEY as bcg_key,
+            A.BCG_CATEGORY as bcg_category,
+            A.BCG_NAME as bcg_name,
+            A.BCG_PRICE as bcg_price,
+            A.BCG_DATE as bcg_date,
+            A.BCG_STOCK as bcg_stock,
+            A.BCG_SALE as bcg_sale,
+            A.BCG_LIKE as bcg_like,
+            A.BCG_INFO as bcg_info,
+            A.BCG_DISCOUNT as bcg_discount,
+            A.BCG_MDPICK as bcg_mdpick,
+            B.BCD_DETAILKEY as bcg_detailkey,
+            B.BCD_OPTION as bcd_option,
+            B.BCD_STOCK as bcd_stock
+        FROM BC_GOODS A, BC_DETAILGOODS B
+        WHERE A.BCG_KEY = B.BCG_KEY
+          AND A.BCG_KEY = #{param1}
+          AND B.BCD_DETAILKEY = #{param2}
+    </select>
+    <update id="basketUpCount">
+        UPDATE BC_BASKET
+        SET BCB_COUNT = BCB_COUNT+1
+        WHERE BCM_NUM = #{param1}
+          AND BCG_KEY = #{param2}
+          AND BCD_DETAILKEY = #{param3}
+    </update>
+    <update id="basketDownCount">
+        UPDATE BC_BASKET
+        SET BCB_COUNT = BCB_COUNT-1
+        WHERE BCM_NUM = #{param1}
+          AND BCG_KEY = #{param2}
+          AND BCD_DETAILKEY = #{param3}
+    </update>
+    <insert id="insertOrderDetail">
+        INSERT INTO BC_ORDER_DETAIL
+            (BCO_ORDERNUM,BCG_KEY,BCD_DETAILKEY,BCO_COUNT)
+        VALUES
+            (#{param1}, #{param2}, #{param3}, #{param4})
+    </insert>
+    <insert id="insertOrderHistory">
+        INSERT INTO BC_ORDER_HISTORY
+                (BCM_NUM, BCO_PHONENUM1, BCO_PHONENUM2, BCO_PHONENUM3 ,BCO_ORDERNUM, BCM_NAME, BCO_RECIPIENT,
+             BCO_TOTALPRICE,BCO_ORDER_STATUS,BCO_ORDERDATE,BCO_DELIVERYDATE,BCO_STATUSDATE,BCO_ORDER_NAME)
+            VALUES
+                ( #{param1}, #{param2} , #{param3}, #{param4} , #{param5} ,#{param6},#{param7},
+              #{param8} , '배송준비중' , SYSDATE, '' , SYSDATE , #{param9} )
+    </insert>
+    <insert id="insertDeliveryInfo">
+        INSERT INTO BC_DELIVERY_INFO
+                (BCM_NUM,BCO_ORDERNUM,BCD_ZIPCODE,BCD_ADDRESS1,BCD_ADDRESS2,BCD_ADDRESS3,BCD_DATE,BCD_REQUEST)
+            VALUES
+                ( #{param1}, #{param2}, #{param3}, #{param4}, #{param5},#{param6}, SYSDATE, #{param7} )
+    </insert>
+    <update id="updateGoodsStock">
+        UPDATE BC_GOODS
+            SET BCG_STOCK = BCG_STOCK-1, BCG_SALE = BCG_SALE+1
+            WHERE BCG_KEY = #{param1}
+    </update>
+    <update id="updateDetailGoodsStock">
+        UPDATE BC_DETAILGOODS
+            SET BCD_STOCK = BCD_STOCK-1
+            WHERE BCG_KEY = #{param1}
+            AND BCD_DETAILKEY = #{param2}
+    </update>
+    <delete id="deleteBasketAfterPayment">
+        DELETE
+            FROM BC_BASKET
+            WHERE BCM_NUM = #{param1}
+            AND BCG_KEY = #{param2}
+            AND BCD_DETAILKEY = #{param3}
+    </delete>
+    <select id="memberManagement" resultType="com.study.springboot.member.dto.MemberJoinOrderHistoryDto">
+        SELECT *
+        FROM (SELECT ROWNUM NUM, A.*
+                FROM (SELECT C.*, ORDER_COUNT, TOTAL_PRICE
+                        FROM (SELECT BCM_NUM,COUNT(BCM_NUM) ORDER_COUNT ,SUM(BCO_TOTALPRICE) TOTAL_PRICE
+                                FROM BC_ORDER_HISTORY
+                            GROUP BY BCM_NUM
+                            ORDER BY BCM_NUM) D,
+                            BC_MEMBER C
+                        WHERE C.BCM_NUM = D.BCM_NUM(+)
+                          AND C.BCM_AUTHORITY = 'role_user'
+                        ORDER BY C.BCM_NUM ASC) A
+                WHERE ROWNUM &lt;= #{param1} ) B
+        WHERE B.NUM &gt;= #{param2}
+    </select>
+    <select id="memberManagementArticlePage" resultType="_int">
+        SELECT COUNT(*) AS TOTAL
+        FROM BC_MEMBER
+        WHERE BCM_AUTHORITY = 'role_user'
+    </select>
+    <select id="serchByNameMemberManagement" resultType="com.study.springboot.member.dto.MemberJoinOrderHistoryDto">
+        SELECT *
+        FROM (SELECT ROWNUM NUM, A.*
+              FROM (SELECT C.*, ORDER_COUNT, TOTAL_PRICE
+                    FROM (SELECT BCM_NUM,COUNT(BCM_NUM) ORDER_COUNT ,SUM(BCO_TOTALPRICE) TOTAL_PRICE
+                          FROM BC_ORDER_HISTORY
+                          GROUP BY BCM_NUM
+                          ORDER BY BCM_NUM) D,
+                         BC_MEMBER C
+                    WHERE C.BCM_NUM = D.BCM_NUM(+)
+                      AND C.BCM_AUTHORITY = 'role_user'
+                      AND C.BCM_NAME LIKE #{param1}
+                    ORDER BY C.BCM_NUM ASC) A
+              WHERE ROWNUM &lt;= #{param2} ) B
+        WHERE B.NUM &gt;= #{param3}
+    </select>
+    <select id="serchByNameMemberManagementArticlePage" resultType="_int">
+        SELECT COUNT(*) AS TOTAL
+        FROM BC_MEMBER
+        WHERE BCM_AUTHORITY = 'role_user'
+        AND BCM_NAME LIKE #{param1}
+    </select>
+    <select id="serchByIdMemberManagement" resultType="com.study.springboot.member.dto.MemberJoinOrderHistoryDto">
+        SELECT *
+        FROM (SELECT ROWNUM NUM, A.*
+              FROM (SELECT C.*, ORDER_COUNT, TOTAL_PRICE
+                    FROM (SELECT BCM_NUM,COUNT(BCM_NUM) ORDER_COUNT ,SUM(BCO_TOTALPRICE) TOTAL_PRICE
+                          FROM BC_ORDER_HISTORY
+                          GROUP BY BCM_NUM
+                          ORDER BY BCM_NUM) D,
+                         BC_MEMBER C
+                    WHERE C.BCM_NUM = D.BCM_NUM(+)
+                      AND C.BCM_AUTHORITY = 'role_user'
+                      AND C.BCM_ID LIKE #{param1}
+                    ORDER BY C.BCM_NUM ASC) A
+              WHERE ROWNUM &lt;= #{param2} ) B
+        WHERE B.NUM &gt;= #{param3}
+    </select>
+    <select id="serchByIdMemberManagementArticlePage" resultType="_int">
+        SELECT COUNT(*) AS TOTAL
+        FROM BC_MEMBER
+        WHERE BCM_AUTHORITY = 'role_user'
+          AND BCM_ID LIKE #{param1}
+    </select>
+    <select id="serchByNumMemberManagement" resultType="com.study.springboot.member.dto.MemberJoinOrderHistoryDto">
+        SELECT *
+        FROM (SELECT ROWNUM NUM, A.*
+              FROM (SELECT C.*, ORDER_COUNT, TOTAL_PRICE
+                    FROM (SELECT BCM_NUM,COUNT(BCM_NUM) ORDER_COUNT ,SUM(BCO_TOTALPRICE) TOTAL_PRICE
+                          FROM BC_ORDER_HISTORY
+                          GROUP BY BCM_NUM
+                          ORDER BY BCM_NUM) D,
+                         BC_MEMBER C
+                    WHERE C.BCM_NUM = D.BCM_NUM(+)
+                      AND C.BCM_AUTHORITY = 'role_user'
+                      AND C.BCM_NUM= #{param1}
+                    ORDER BY C.BCM_NUM ASC) A
+              WHERE ROWNUM &lt;= #{param2} ) B
+        WHERE B.NUM &gt;= #{param3}
+    </select>
+    <select id="serchByNumMemberManagementArticlePage" resultType="_int">
+        SELECT COUNT(*) AS TOTAL
+        FROM BC_MEMBER
+        WHERE BCM_AUTHORITY = 'role_user'
+          AND BCM_NUM = #{param1}
+    </select>
+    <update id="upgradeAdmin">
+        UPDATE BC_MEMBER
+        SET BCM_AUTHORITY = 'role_admin'
+        WHERE BCM_NUM = #{param1}
+    </update>
+    <update id="updatePurchaseConfirmation">
+        UPDATE BC_ORDER_HISTORY
+        SET BCO_ORDER_STATUS = '구매확정'
+        WHERE 14 &lt;= (SYSDATE - BCO_ORDERDATE)
+    </update>
+    <select id="basketCount" resultType="_int">
+        SELECT  COUNT(*) AS TOTAL
+        FROM BC_BASKET
+        WHERE BCM_NUM = #{param1}
+    </select>
+    <select id="lastDeliveryDestination" resultType="com.study.springboot.member.dto.DeliveryInfoDto">
+        SELECT *
+        FROM (SELECT ROWNUM NUM, A.*
+              FROM (SELECT *
+                    FROM BC_DELIVERY_INFO
+                    WHERE BCM_NUM = #{param1}
+                    ORDER BY BCD_DATE DESC) A
+              WHERE ROWNUM &lt;= 3 ) B
+        WHERE B.NUM &gt;= 1
+    </select>
+    <select id="getAllFcmToken" resultType="String">
+        select BCM_FCM_TOKEN from BC_MEMBER where BCM_FCM_TOKEN is not null
+    </select>
+    <select id="getFcmToken" resultType="String">
+        SELECT BCM_FCM_TOKEN
+        FROM BC_MEMBER
+        WHERE BCM_NUM = (SELECT BCM_NUM FROM BC_ORDER_HISTORY WHERE BCO_ORDERNUM = #{param1})
+    </select>
+</mapper>
+
+<!--
+1.sql 문 뒤에 세미콜론 절대 들어가면 안된다.
+2.여기서 사용한 컬럼명으로 DTO(Value Object)의 필드명을 만들어야 한다.
+3.select a.dno, b.dno 등의 경우 컬럼명에 alias를 사용하지 않으면 문제가 생김
+4.ResultMap vs VO : VO가 더 빠르다.
+    "iBatis 개발진에서 VO을 권장한다.
+    왜냐하면 Map은 (iBatis에서 ) 수치상 훨씬 느리다고 한다.
+ -->

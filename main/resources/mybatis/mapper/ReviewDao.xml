@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.study.springboot.goods.dao.ReviewDao">
+    <select id="reviewList" resultType="com.study.springboot.goods.dto.ReviewDto">
+        SELECT *
+        FROM ( SELECT ROWNUM NUM, A.*
+               FROM (SELECT *
+                     FROM BC_REVIEW
+                     WHERE BCG_KEY = #{param1}
+                     ORDER BY BCR_DATE DESC ) A
+               WHERE ROWNUM &lt;= #{param2} ) B
+        WHERE B.NUM &gt;= #{param3}
+    </select>
+    <select id="reviewListArticlePage" resultType="_int">
+        SELECT COUNT(*) AS TOTAL FROM BC_REVIEW WHERE BCG_KEY = #{param1}
+    </select>
+    <insert id="upReview">
+		insert into BC_REVIEW (BCG_KEY, BCG_NAME, BCM_NUM, BCM_NAME, BCR_PHOTO, BCR_SCORE, BCR_DATE, BCR_CONTENT) 
+			<choose>
+				<when test="param5==null"> 
+					values (#{param1}, #{param2}, #{param3}, #{param4}, '', #{param6}, sysdate, #{param7}) 
+				</when>
+				<otherwise>
+					values (#{param1}, #{param2}, #{param3}, #{param4}, #{param5}, #{param6}, sysdate, #{param7}) 
+				</otherwise>
+			</choose>
+	</insert>
+	<update id="rvOnetime">
+		update BC_ORDER_DETAIL set bco_reviewcheck = 'true' 
+			where bco_ordernum = #{param1} and bcg_key = #{param2}
+	</update>
+</mapper>

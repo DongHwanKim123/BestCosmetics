@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="com.study.springboot.goods.dao.GoodsDetailDao">
+	<!-- 옵션 등록 -->
+	<insert id="uploadDetail">
+    	insert into BC_DETAILGOODS (BCG_KEY, BCD_DETAILKEY, BCD_OPTION, BCD_STOCK) 
+        	values ((select bcg_key from bc_goods where bcg_name =  #{param1}), #{param2}, #{param3}, #{param4})
+    </insert>
+    
+    <!-- 옵션 중복체크 -->
+	<select id="detailKeyCheck" resultType="com.study.springboot.goods.dto.GoodsDetailDto">
+    	select * from bc_detailgoods where bcg_key = 
+		(select bcg_key from bc_goods where bcg_name = #{param1}) and bcd_detailkey=#{param2}
+    </select>
+    
+    <!-- 옵션삭제 -->
+    <delete id="deleteDetail">
+		delete from BC_DETAILGOODS where bcg_key = #{param1}
+	</delete>
+	
+	<!-- 총 재고수량 업데이트 -->
+	<update id="AddStock">
+        update bc_goods set bcg_stock = bcg_stock + #{param1} 
+        	where bcg_key = (select distinct (select bcg_key from bc_goods where bcg_name = #{param2}) 
+       			from BC_DETAILGOODS group by bcg_key)
+	</update>
+	<!-- 옵션리스트 -->
+	<select id="optionList" resultType="com.study.springboot.goods.dto.GoodsDetailDto">
+		select * from bc_detailgoods where bcg_key = #{param1}
+	</select>
+
+	<!-- 재고수정 -->
+	<update id="stockUpdate">
+		update bc_detailgoods set bcd_stock = #{param1} where bcd_detailkey = #{param2} and bcg_key = #{param3}
+	</update>
+   
+	<!-- 총 재고수량 수정 -->
+	<update id="ModifyStock">
+		update bc_goods set bcg_stock = #{param1} where bcg_key = #{param2}
+	</update>
+   
+	<!-- 옵션 삭제-->
+	<delete id="deleteOption">
+		delete from BC_DETAILGOODS where bcd_detailkey = #{param1} and bcg_key = #{param2}
+	</delete>
+	<!-- 옵션 삭제 시 총 재고 업데이트-->
+    <update id="ModifyStockDelete">
+		update bc_goods set bcg_stock = bcg_stock - #{param1} where bcg_key = #{param2}
+	</update>
+</mapper>

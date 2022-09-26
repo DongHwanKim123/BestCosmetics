@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.springboot.member.dao.KMemberDao">
+
+    <select id="googleCheck" resultType="com.study.springboot.member.dto.MemberDto">
+    	select * from bc_member where bcm_googleid = #{param1}
+    </select>
+    <select id="facebookCheck" resultType="com.study.springboot.member.dto.MemberDto">
+    	select * from bc_member where bcm_name = #{param1} and bcm_email = #{param2} and bcm_facebookid is not null
+    </select>
+    <select id="kakaoCheck" resultType="com.study.springboot.member.dto.MemberDto">
+    	select * from bc_member where bcm_kakaoid = #{param1}
+    </select>
+    <select id="naverCheck" resultType="com.study.springboot.member.dto.MemberDto">
+    	select * from bc_member where bcm_naverid = #{param1}
+    </select>
+    <insert id="googleJoin">
+    	insert into bc_member
+            (bcm_num , bcm_id , bcm_pw , bcm_name , bcm_email, bcm_googleid, bcm_naverid, bcm_kakaoid, bcm_facebookid,
+             bcm_zipcode,bcm_address1,bcm_address2,bcm_address3,bcm_phonenum1,bcm_phonenum2,bcm_phonenum3,
+             bcm_authority,bcm_enable,bcm_joined_on,bcm_stopdate)
+            values ( bcm_num_seq.nextval , '' , '' , #{param2} , #{param3} , #{param1},'','','','','','','','','',
+                    '','role_user','true',sysdate,sysdate)
+    </insert>
+    <insert id="facebookJoin">
+    	insert into bc_member
+            (bcm_num , bcm_id , bcm_pw , bcm_name , bcm_email, bcm_googleid, bcm_naverid, bcm_kakaoid, bcm_facebookid,
+             bcm_zipcode,bcm_address1,bcm_address2,bcm_address3,bcm_phonenum1,bcm_phonenum2,bcm_phonenum3,
+             bcm_authority,bcm_enable,bcm_joined_on,bcm_stopdate)
+            values ( bcm_num_seq.nextval , '' , '' , #{param2} , #{param3} , '', '','',#{param1},'','','','','','',
+                    '','role_user','true',sysdate,sysdate)
+    </insert>
+    <insert id="kakaoJoin">
+    	insert into bc_member
+            (bcm_num , bcm_id , bcm_pw , bcm_name , bcm_email, bcm_googleid, bcm_naverid, bcm_kakaoid, bcm_facebookid,
+             bcm_zipcode,bcm_address1,bcm_address2,bcm_address3,bcm_phonenum1,bcm_phonenum2,bcm_phonenum3,
+             bcm_authority,bcm_enable,bcm_joined_on,bcm_stopdate)
+            values ( bcm_num_seq.nextval , '' , '' , #{param2} , #{param3} , '', '',#{param1},'','','','','','','',
+                    '','role_user','true',sysdate,sysdate)
+    </insert>
+    <insert id="naverJoin">
+    	insert into bc_member
+            (bcm_num , bcm_id , bcm_pw , bcm_name , bcm_email, bcm_googleid, bcm_naverid, bcm_kakaoid, bcm_facebookid,
+             bcm_zipcode,bcm_address1,bcm_address2,bcm_address3,bcm_phonenum1,bcm_phonenum2,bcm_phonenum3,
+             bcm_authority,bcm_enable,bcm_joined_on,bcm_stopdate)
+            values ( bcm_num_seq.nextval , '' , '' , #{param2} , #{param3} , '', #{param1},'','','','','','','','',
+                    '','role_user','true',sysdate,sysdate)
+    </insert>
+    <select id="memberSession" resultType="com.study.springboot.member.dto.MemberDto">
+    	select * from bc_member where bcm_id = #{param1}
+    </select>
+    <select id="likeCount" resultType="_int">
+		select count(*) as total from bc_like where bcm_num = #{param1}
+	</select>
+	<select id="likeList" resultType="com.study.springboot.member.dto.Like">
+		select * from ( select rownum num, A.* from (
+			select c.bcm_num, c.bcg_key, d.bcg_img ,c.bcl_date from bc_like C, bc_goods D where c.bcg_key = d.bcg_key and c.bcm_num = #{param3} order by c.bcl_date desc ) A 
+			<![CDATA[where rownum <= #{param2}]]> ) B 
+			where B.num >= #{param1}
+	</select>
+	<delete id="likeDelete">
+		delete from bc_like where bcm_num = #{param1} and bcg_key = #{param2}
+	</delete>
+	<select id="orderDetail" resultType="com.study.springboot.member.dto.OrderDetail">
+		select a.bco_ordernum, a.bcg_key, a.bcd_detailkey, a.bco_count, b.bcg_name, b.bcg_price, b.bcg_img, c.bcd_option, a.bco_count*b.bcg_price as total_price, d.bco_order_status, a.bco_reviewcheck 
+		from bc_order_detail A, bc_goods B , bc_detailgoods C, bc_order_history D where A.bcg_key = B.bcg_key and A.bcd_detailkey = C.bcd_detailkey and a.bcg_key = c.bcg_key and a.bco_ordernum = d.bco_ordernum and a.bco_ordernum = #{param1} 
+		group by a.bco_ordernum, a.bcg_key, a.bcd_detailkey, a.bco_count, b.bcg_name, b.bcg_price, b.bcg_img, c.bcd_option, a.bco_count*b.bcg_price, d.bco_order_status, a.bco_reviewcheck
+	</select>
+	<select id="pwCheck" resultType="com.study.springboot.member.dto.MemberDto">
+		select bcm_pw from bc_member where bcm_num = #{param1}
+	</select>
+	<update id="pwChange">
+		update bc_member set bcm_pw = #{param2} where bcm_num = #{param1}
+	</update>
+	<delete id="memberDelete">
+		delete from bc_member where bcm_num = #{param1}
+	</delete>
+	<select id="orderManagement" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+		select bco_ordernum, bco_orderdate, bcm_name, bco_recipient, bco_totalprice, bco_order_name from ( select rownum num, A.* from (
+			select * from bc_order_history where bco_order_status = #{param1} order by bco_orderdate desc ) A 
+			<![CDATA[where rownum <= #{param2}]]> ) B 
+			where B.num >= #{param3}
+	</select>
+	<select id="orderManagementCount" resultType="_int">
+		select count(*) as total from bc_order_history where bco_order_status = #{param1}
+	</select>
+	<select id="orderManagementTotalPrice" resultType="string">
+		select sum(bco_totalprice) from bc_order_history where bco_order_status = #{param1}
+	</select>
+	<select id="nameOrderManagementCount" resultType="_int">
+		select count(*) as total from bc_order_history where bco_order_status = #{param1} and bcm_name like #{param2}
+	</select>
+	<select id="nameOrderManagementTotalPrice" resultType="string">
+		select sum(bco_totalprice) from bc_order_history where bco_order_status = #{param1} and bcm_name like #{param2}
+	</select>
+	<select id="nameOrderManagement" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+		select bco_ordernum, bco_orderdate, bcm_name, bco_recipient, bco_totalprice, bco_order_name from ( select rownum num, A.* from (
+			select * from bc_order_history where bco_order_status = #{param1} and bcm_name like #{param4} order by bco_orderdate desc ) A 
+			<![CDATA[where rownum <= #{param2}]]> ) B 
+			where B.num >= #{param3}
+	</select>
+	<select id="recipientOrderManagementCount" resultType="_int">
+		select count(*) as total from bc_order_history where bco_order_status = #{param1} and bco_recipient like #{param2}
+	</select>
+	<select id="recipientOrderManagementTotalPrice" resultType="string">
+		select sum(bco_totalprice) from bc_order_history where bco_order_status = #{param1} and bco_recipient like #{param2}
+	</select>
+	<select id="recipientOrderManagement" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+		select bco_ordernum, bco_orderdate, bcm_name, bco_recipient, bco_totalprice, bco_order_name from ( select rownum num, A.* from (
+			select * from bc_order_history where bco_order_status = #{param1} and bco_recipient like #{param4} order by bco_orderdate desc ) A 
+			<![CDATA[where rownum <= #{param2}]]> ) B 
+			where B.num >= #{param3}
+	</select>
+	<select id="ordernumOrderManagementCount" resultType="_int">
+		select count(*) as total from bc_order_history where bco_order_status = #{param1} and bco_ordernum like #{param2}
+	</select>
+	<select id="ordernumOrderManagementTotalPrice" resultType="string">
+		select sum(bco_totalprice) from bc_order_history where bco_order_status = #{param1} and bco_ordernum like #{param2}
+	</select>
+	<select id="ordernumOrderManagement" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+		select bco_ordernum, bco_orderdate, bcm_name, bco_recipient, bco_totalprice, bco_order_name from ( select rownum num, A.* from (
+			select * from bc_order_history where bco_order_status = #{param1} and bco_ordernum like #{param4} order by bco_orderdate desc ) A 
+			<![CDATA[where rownum <= #{param2}]]> ) B 
+			where B.num >= #{param3}
+	</select>
+	<update id="stateInTransitChange">
+		update bc_order_history set bco_order_status = '배송중', bco_statusdate = sysdate where bco_ordernum = #{param1}
+	</update>
+	<update id="stateDeliveryCompletedChange">
+		update bc_order_history set bco_order_status = '배송완료', bco_statusdate = sysdate where bco_ordernum = #{param1}
+	</update>
+	<update id="stateChange">
+		update bc_order_history set bco_order_status = #{param1}, bco_statusdate = sysdate where bco_ordernum = #{param2}
+	</update>
+	<select id="orderManagementCER" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+		select bcm_num, bco_ordernum, bcm_name, bco_recipient, bco_totalprice, bco_order_status, bco_orderdate, bco_deliverydate, bco_statusdate, bco_order_name from ( select rownum num, A.* from (
+			select * from bc_order_history where bco_order_status not in('배송준비중', '배송중', '배송완료', '구매확정') order by bco_orderdate desc ) A 
+			<![CDATA[where rownum <= #{param1}]]> ) B 
+			where B.num >= #{param2}
+	</select>
+	<select id="orderManagementCERCount" resultType="_int">
+		select count(*) as total from bc_order_history where bco_order_status not in('배송준비중', '배송중', '배송완료', '구매확정')
+	</select>
+	<select id="orderManagementCERTotalPrice" resultType="string">
+		select sum(bco_totalprice) from bc_order_history where bco_order_status not in('배송준비중', '배송중', '배송완료', '구매확정')
+	</select>
+	<select id="nameOrderManagementCERCount" resultType="_int">
+		select count(*) as total from bc_order_history where bco_order_status not in('배송준비중', '배송중', '배송완료', '구매확정') and bcm_name like #{param1}
+	</select>
+	<select id="nameOrderManagementCERTotalPrice" resultType="string">
+		select sum(bco_totalprice) from bc_order_history where bco_order_status not in('배송준비중', '배송중', '배송완료', '구매확정') and bcm_name like #{param1}
+	</select>
+	<select id="nameOrderManagementCER" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+		select bcm_num, bco_ordernum, bcm_name, bco_recipient, bco_totalprice, bco_order_status, bco_orderdate, bco_deliverydate, bco_statusdate, bco_order_name from ( select rownum num, A.* from (
+			select * from bc_order_history where bco_order_status not in('배송준비중', '배송중', '배송완료', '구매확정') and bcm_name like #{param1} order by bco_orderdate desc ) A 
+			<![CDATA[where rownum <= #{param2}]]> ) B 
+			where B.num >= #{param3}
+	</select>
+	<select id="ordernumOrderManagementCERCount" resultType="_int">
+		select count(*) as total from bc_order_history where bco_order_status not in('배송준비중', '배송중', '배송완료', '구매확정') and bco_ordernum like #{param1}
+	</select>
+	<select id="ordernumOrderManagementCERTotalPrice" resultType="string">
+		select sum(bco_totalprice) from bc_order_history where bco_order_status not in('배송준비중', '배송중', '배송완료', '구매확정') and bco_ordernum like #{param1}
+	</select>
+	<select id="ordernumOrderManagementCER" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+		select bcm_num, bco_ordernum, bcm_name, bco_recipient, bco_totalprice, bco_order_status, bco_orderdate, bco_deliverydate, bco_statusdate, bco_order_name from ( select rownum num, A.* from (
+			select * from bc_order_history where bco_order_status not in('배송준비중', '배송중', '배송완료', '구매확정') and bco_ordernum like #{param1} order by bco_orderdate desc ) A 
+			<![CDATA[where rownum <= #{param2}]]> ) B 
+			where B.num >= #{param3}
+	</select>
+	<select id="orderStatusOrderManagementCERCount" resultType="_int">
+		select count(*) as total from bc_order_history where bco_order_status not in('배송준비중', '배송중', '배송완료', '구매확정') and bco_order_status like #{param1}
+	</select>
+	<select id="orderStatusOrderManagementCERTotalPrice" resultType="string">
+		select sum(bco_totalprice) from bc_order_history where bco_order_status not in('배송준비중', '배송중', '배송완료', '구매확정') and bco_order_status like #{param1}
+	</select>
+	<select id="orderStatusOrderManagementCER" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+		select bcm_num, bco_ordernum, bcm_name, bco_recipient, bco_totalprice, bco_order_status, bco_orderdate, bco_deliverydate, bco_statusdate, bco_order_name from ( select rownum num, A.* from (
+			select * from bc_order_history where bco_order_status not in('배송준비중', '배송중', '배송완료', '구매확정') and bco_order_status like #{param1} order by bco_orderdate desc ) A 
+			<![CDATA[where rownum <= #{param2}]]> ) B 
+			where B.num >= #{param3}
+	</select>
+	
+	
+	
+	
+	
+	<select id="TotalOrderListCount" resultType="_int">
+		select count(*) as total from bc_order_history
+	</select>
+	<select id="TotalOrderList" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+		select bcm_num, bco_ordernum, bcm_name, bco_recipient, bco_totalprice, bco_order_status, bco_orderdate, bco_deliverydate, bco_statusdate, bco_order_name from ( select rownum num, A.* from (
+			select * from bc_order_history order by bco_orderdate desc ) A 
+			<![CDATA[where rownum <= #{param1}]]> ) B 
+			where B.num >= #{param2}
+	</select>
+	<select id="TotalOrderListTotalPrice" resultType="string">
+		select sum(bco_totalprice) from bc_order_history
+	</select>
+	<select id="nameTotalOrderListCount" resultType="_int">
+		select count(*) as total from bc_order_history where bcm_name like #{param1}
+	</select>
+	<select id="nameTotalOrderList" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+		select bcm_num, bco_ordernum, bcm_name, bco_recipient, bco_totalprice, bco_order_status, bco_orderdate, bco_deliverydate, bco_statusdate, bco_order_name from ( select rownum num, A.* from (
+			select * from bc_order_history where bcm_name like #{param3} order by bco_orderdate desc ) A 
+			<![CDATA[where rownum <= #{param1}]]> ) B 
+			where B.num >= #{param2}
+	</select>
+	<select id="nameTotalOrderListTotalPrice" resultType="string">
+		select sum(bco_totalprice) from bc_order_history where bcm_name like #{param1}
+	</select>
+	<select id="recipientTotalOrderListCount" resultType="_int">
+		select count(*) as total from bc_order_history where bco_recipient like #{param1}
+	</select>
+	<select id="recipientTotalOrderList" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+		select bcm_num, bco_ordernum, bcm_name, bco_recipient, bco_totalprice, bco_order_status, bco_orderdate, bco_deliverydate, bco_statusdate, bco_order_name from ( select rownum num, A.* from (
+			select * from bc_order_history where bco_recipient like #{param3} order by bco_orderdate desc ) A 
+			<![CDATA[where rownum <= #{param1}]]> ) B 
+			where B.num >= #{param2}
+	</select>
+	<select id="recipientTotalOrderListTotalPrice" resultType="string">
+		select sum(bco_totalprice) from bc_order_history where bco_recipient like #{param1}
+	</select>
+	<select id="ordernumTotalOrderListCount" resultType="_int">
+		select count(*) as total from bc_order_history where bco_ordernum like #{param1}
+	</select>
+	<select id="ordernumTotalOrderList" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+		select bcm_num, bco_ordernum, bcm_name, bco_recipient, bco_totalprice, bco_order_status, bco_orderdate, bco_deliverydate, bco_statusdate, bco_order_name from ( select rownum num, A.* from (
+			select * from bc_order_history where bco_ordernum like #{param3} order by bco_orderdate desc ) A 
+			<![CDATA[where rownum <= #{param1}]]> ) B 
+			where B.num >= #{param2}
+	</select>
+	<select id="ordernumTotalOrderListTotalPrice" resultType="string">
+		select sum(bco_totalprice) from bc_order_history where bco_ordernum like #{param1}
+	</select>
+	<select id="orderStatusTotalOrderListCount" resultType="_int">
+		select count(*) as total from bc_order_history where bco_order_status like #{param1}
+	</select>
+	<select id="orderStatusTotalOrderList" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+		select bcm_num, bco_ordernum, bcm_name, bco_recipient, bco_totalprice, bco_order_status, bco_orderdate, bco_deliverydate, bco_statusdate, bco_order_name from ( select rownum num, A.* from (
+			select * from bc_order_history where bco_order_status like #{param3} order by bco_orderdate desc ) A 
+			<![CDATA[where rownum <= #{param1}]]> ) B 
+			where B.num >= #{param2}
+	</select>
+	<select id="orderStatusTotalOrderListTotalPrice" resultType="string">
+		select sum(bco_totalprice) from bc_order_history where bco_order_status like #{param1}
+	</select>
+</mapper>
+<!--
+1.sql 문 뒤에 세미콜론 절대 들어가면 안된다.
+2.여기서 사용한 컬럼명으로 DTO(Value Object)의 필드명을 만들어야 한다.
+3.select a.dno, b.dno 등의 경우 컬럼명에 alias를 사용하지 않으면 문제가 생김
+4.ResultMap vs VO : VO가 더 빠르다.
+    "iBatis 개발진에서 VO을 권장한다.
+    왜냐하면 Map은 (iBatis에서 ) 수치상 훨씬 느리다고 한다.
+ -->

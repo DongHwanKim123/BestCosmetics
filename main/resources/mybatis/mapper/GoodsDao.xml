@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="com.study.springboot.goods.dao.GoodsDao">
+	<!-- 상품 등록 -->
+	<insert id="upload">
+		insert into BC_GOODS (BCG_KEY, BCG_CATEGORY, BCG_NAME, BCG_PRICE, BCG_DATE, BCG_STOCK, BCG_IMG, BCG_IMGDETAIL, BCG_INFO) 
+			values (BC_GOODS_SEQ.nextval, #{param4}, #{param3}, #{param5}, sysdate, 0, #{param1}, #{param2}, #{param6})
+	</insert>
+	<!-- 전체 리스트 -->
+	<select id="selectCount" resultType="_int">
+		select count(*) as total from BC_GOODS
+	</select>
+	<select id="list" resultType="com.study.springboot.goods.dto.GoodsDto">
+		select * from ( select rownum num, A.* from (
+			select * from bc_goods order by bcg_date desc, bcg_key desc ) A 
+			<![CDATA[where rownum <= #{param2}]]> ) B 
+			where B.num >= #{param1}
+	</select>
+	<select id="mdList" resultType="com.study.springboot.goods.dto.GoodsDto">
+		select * from ( select rownum num, A.* from (
+			select * from bc_goods where bcg_mdpick != 0 order by bcg_mdpick asc, bcg_key desc ) A 
+			<![CDATA[where rownum <= #{param2}]]> ) B 
+			where B.num >= #{param1}
+	</select>
+	<select id="bestList" resultType="com.study.springboot.goods.dto.GoodsDto">
+		select * from ( select rownum num, A.* from (
+			select * from bc_goods order by bcg_sale desc, bcg_key desc ) A 
+			<![CDATA[where rownum <= #{param2}]]> ) B 
+			where B.num >= #{param1}
+	</select>
+	<select id="newList" resultType="com.study.springboot.goods.dto.GoodsDto">
+		select * from ( select rownum num, A.* from (
+			select * from bc_goods order by bcg_date desc, bcg_key desc ) A 
+			<![CDATA[where rownum <= #{param2}]]> ) B 
+			where B.num >= #{param1}
+	</select>
+	<select id="listSessionX" resultType="com.study.springboot.goods.dto.GoodsJoinLikes">
+		select *
+			from ( select rownum num, A.*
+					from (select c.*, d.bcg_key item
+			                from (select bcg_key
+			                        from bc_like
+			                    group by bcg_key) D,
+			                    bc_goods C
+			            where C.BCG_key = D.bcg_key (+)
+			            order by C.bcg_date desc, C.bcg_key desc  ) A
+					where rownum &lt;= #{param1} ) B
+			where B.num &gt;= #{param2}
+	</select>
+	<select id="listSessionO" resultType="com.study.springboot.goods.dto.GoodsJoinLikes">
+		select *
+			from ( select rownum num, A.*
+				from (select c.*, d.BCG_KEY item
+					  from bc_goods C , (select BCG_KEY
+										 from bc_like
+										 where BCM_NUM = #{param1}
+										 group by bcg_key) D
+					  where C.BCG_key = D.bcg_key (+)
+					  order by C.bcg_date desc, C.bcg_key desc) A
+		    where rownum &lt;= #{param2} ) B
+		where B.num &gt;= #{param3}
+	</select>
+	<!-- 검색 -->
+	<select id="selectCountSearch" resultType="_int">
+		select count(*) as total from BC_GOODS where
+		<choose>
+			<when test="param1.equals('bcg_key')"> bcg_key = #{param2} </when>
+			<when test="param1.equals('bcg_name')"> bcg_name like '%${param2}%' </when>
+		</choose>
+	</select>
+	<!-- 관리자검색 -->
+	<select id="searchList" resultType="com.study.springboot.goods.dto.GoodsDto">
+		select * from ( select rownum num, A.* from (
+			select * from bc_goods where
+			<choose>
+				<when test="param3.equals('bcg_key')"> bcg_key = #{param4} </when>
+				<when test="param3.equals('bcg_name')"> bcg_name like '%${param4}%' </when>
+			</choose>
+			order by bcg_date desc, bcg_key desc ) A 
+			<![CDATA[where rownum <= #{param2}]]> ) B 
+			where B.num >= #{param1}
+	</select>
+	<!-- 검색 -->
+	<select id="searchListSessionX" resultType="com.study.springboot.goods.dto.GoodsJoinLikes">
+		select * from ( select rownum num, A.* from (
+			select c.*, d.bcg_key item from (
+				select bcg_key from bc_like group by bcg_key) D, bc_goods C 
+					where C.bcg_name like '%${param4}%' and C.BCG_key = D.bcg_key (+)
+				order by C.bcg_date desc, C.bcg_key desc  ) A
+			where rownum &lt;= #{param2} ) B
+		where B.num &gt;= #{param1}
+	</select>
+	<select id="searchListSessionO" resultType="com.study.springboot.goods.dto.GoodsJoinLikes">
+		select * from ( select rownum num, A.* from (
+			select c.*, d.bcg_key item from bc_goods C , (select BCG_KEY
+															from bc_like
+															where BCM_NUM = #{param1}
+															group by bcg_key) D where
+			<choose>
+				<when test="param4.equals('bcg_key')"> C.bcg_key = #{param5} </when>
+				<when test="param4.equals('bcg_name')"> C.bcg_name like '%${param5}%' </when>
+			</choose>
+				and C.BCG_key = D.bcg_key (+)
+			order by C.bcg_date desc, C.bcg_key desc ) A
+			where rownum &lt;= #{param3} ) B
+		where B.num &gt;= #{param2}
+	</select>
+	<!-- 카테고리검색  : 포인트 -->
+	<select id="searchCListSessionX" resultType="com.study.springboot.goods.dto.GoodsJoinLikes">
+		select * from ( select rownum num, A.* from (
+			select c.*, d.bcg_key item from (
+				select bcg_key from bc_like group by bcg_key) D, bc_goods C 
+					where C.bcg_category = 'point' and C.bcg_name like '%${param4}%' and C.BCG_key = D.bcg_key (+)
+				order by C.bcg_date desc, C.bcg_key desc  ) A
+			where rownum &lt;= #{param2} ) B
+		where B.num &gt;= #{param1}
+	</select>
+	<select id="searchCListSessionO" resultType="com.study.springboot.goods.dto.GoodsJoinLikes">
+		select * from ( select rownum num, A.* from (
+			select c.*, d.bcg_key item from bc_goods C , (select BCG_KEY
+															from bc_like
+															where BCM_NUM = #{param1}
+															group by bcg_key) D where C.bcg_category = 'point' and
+			<choose>
+				<when test="param4.equals('bcg_key')"> C.bcg_key = #{param5} </when>
+				<when test="param4.equals('bcg_name')"> C.bcg_name like '%${param5}%' </when>
+			</choose>
+				and C.BCG_key = D.bcg_key (+)
+			order by C.bcg_date desc, C.bcg_key desc ) A
+			where rownum &lt;= #{param3} ) B
+		where B.num &gt;= #{param2}
+	</select>
+	<select id="selectCountSearchC" resultType="_int">
+		select count(*) as total from BC_GOODS where bcg_category = 'point' and 
+		<choose>
+			<when test="param1.equals('bcg_key')"> bcg_key = #{param2} </when>
+			<when test="param1.equals('bcg_name')"> bcg_name like '%${param2}%' </when>
+		</choose>
+	</select>
+	<!-- 포인트메이크업 -->
+	<select id="selectCountPoint" resultType="_int">
+		select count(*) as total from BC_GOODS where BCG_CATEGORY = 'point'
+	</select>
+	<!-- 세션 있을때 -->
+	<select id="sessionPointList" resultType="com.study.springboot.goods.dto.GoodsJoinLikes">
+		select *
+		from ( select rownum num, A.*
+		from (select c.*, d.bcg_key item
+		from bc_goods C , (select BCG_KEY
+						   from bc_like
+						   where BCM_NUM = #{param1}
+						   group by bcg_key) D
+		where C.bcg_category = 'point'
+		and C.BCG_key = D.bcg_key (+)
+		order by C.bcg_date desc, C.bcg_key desc ) A
+		where rownum &lt;= #{param2} ) B
+		where B.num &gt;= #{param3}
+	</select>
+	<!-- 세션 없을때 -->
+	<select id="seessionXPointList" resultType="com.study.springboot.goods.dto.GoodsJoinLikes">
+		select *
+		from ( select rownum num, A.*
+		from (select c.*, d.bcg_key item
+		from (select bcg_key
+		from bc_like
+		group by bcg_key) D,
+		bc_goods C
+		where C.bcg_category = 'point'
+		and C.BCG_key = D.bcg_key (+)
+		order by C.bcg_date desc, C.bcg_key desc  ) A
+		where rownum &lt;= #{param1} ) B
+		where B.num &gt;= #{param2}
+	</select>
+	<!-- 상품 삭제 -->
+	<delete id="delete">
+		delete from bc_goods where bcg_key = #{param1}
+	</delete>
+	<!-- 상품 수정 -->
+	<update id="modify">
+		update bc_goods 
+			set bcg_price = #{param2}*(100-#{param4})/100,
+			    bcg_info = #{param3}, bcg_discount = #{param4}, bcg_mdpick = #{param5} 
+			where bcg_key = #{param1}
+	</update>
+	<!-- 로우 1개 select -->
+	<select id="opSelect" resultType="com.study.springboot.goods.dto.GoodsDto">
+		select * from bc_goods where bcg_key = #{param1}
+	</select>
+	
+	<!-- best뱃지 
+	<select id="best" resultType="com.study.springboot.goods.dto.GoodsDto">
+		select * from bc_goods <![CDATA[where rownum <=5 order by bcg_sale desc]]>
+	</select>
+	-->
+	<!-- 찜 -->
+	<update id="goodsTableUpdate">
+		update bc_goods set bcg_like = bcg_like+1 where bcg_key = #{param1}
+	</update>
+	<update id="goodsTableUpdate2">
+		update bc_goods set bcg_like = bcg_like-1 where bcg_key = #{param1}
+	</update>
+	<select id="likeCount" resultType="int">
+		select count(*) from bc_like where bcm_num = #{param1} and bcg_key = #{param2}
+	</select>
+   	<update id="likeTableUpdate">
+      merge into BC_LIKE using dual 
+         on (BCM_NUM = #{param1} and BCG_KEY = #{param2} )
+         when matched then
+            update set bcl_date = sysdate 
+            delete where BCM_NUM = #{param1} and BCG_KEY = #{param2}
+         when not matched then 
+            insert (BCM_NUM, BCG_KEY, BCL_DATE) values(#{param1}, #{param2}, sysdate)        
+   	</update>
+	<select id="mdPickCheck" resultType="com.study.springboot.goods.dto.GoodsDto">
+        SELECT * FROM BC_GOODS WHERE BCG_MDPICK = #{param1}
+    </select>
+
+</mapper>

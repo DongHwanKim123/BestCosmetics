@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.study.springboot.goods.dao.hs.YGoodsDao">
+	<select id="goodsMDListView" resultType="com.study.springboot.goods.dto.GoodsDto">
+        select * from bc_goods where bcg_mdpick != 0 order by bcg_mdpick asc
+    </select>
+    
+    <select id="goodsBestListView" resultType="com.study.springboot.goods.dto.GoodsDto">
+        select * from bc_goods order by bcg_sale desc
+    </select>
+    
+    <select id="goodsNewListView" resultType="com.study.springboot.goods.dto.GoodsDto">
+        select * from bc_goods where bcg_date > sysdate-30 order by bcg_date desc
+    </select>
+    
+    <select id="goodsQuestionView" resultType="com.study.springboot.goods.dto.QuestionDto">
+        select * from bc_question where bcg_key = #{param1} order by bcq_date desc
+    </select>
+    
+	<insert id="question">
+		insert into BC_QUESTION (BCG_KEY, BCG_NAME, BCM_NUM, BCM_NAME, BCQ_DATE, BCQ_CONTENT, BCQ_SECRET, BCA_DATE, BCA_CONTENT) 
+			values (#{param1}, #{param2}, #{param3}, #{param4}, sysdate, #{param5}, #{param6}, '', '')
+	</insert>
+
+</mapper>

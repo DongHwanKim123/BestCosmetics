@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.study.springboot.goods.dao.QuestionDao">
+    <select id="questionListView" resultType="com.study.springboot.goods.dto.QuestionDto">
+        SELECT *
+        FROM ( SELECT ROWNUM NUM, A.*
+                FROM (SELECT *
+                        FROM BC_QUESTION
+                        WHERE BCG_KEY = #{param1}
+                        ORDER BY BCQ_DATE DESC ) A
+            WHERE ROWNUM &lt;= #{param2} ) B
+        WHERE B.NUM &gt;= #{param3}
+    </select>
+    <select id="questionListViewArticlePage" resultType="_int">
+        SELECT COUNT(*) AS TOTAL FROM BC_QUESTION WHERE BCG_KEY = #{param1}
+    </select>
+	<insert id="uploadQnA">
+		insert into BC_QUESTION (BCG_KEY, BCG_NAME, BCM_NUM, BCM_NAME, BCQ_DATE, BCQ_CONTENT, BCQ_SECRET, BCA_DATE, BCA_CONTENT) 
+			values (#{param1}, #{param2}, #{param3}, #{param4}, sysdate, #{param5}, #{param6}, '', '')
+	</insert>
+	
+	<select id="questionListAdminView" resultType="com.study.springboot.goods.dto.QuestionDto">
+		select * from bc_question order by bcq_date desc
+	</select>
+	
+	<select id="selectCountQuestion" resultType="_int">
+		select count(*) as total from bc_question
+	</select>
+	
+	<update id="answer">
+		update bc_question set bca_content = #{param5}, bca_date = sysdate
+		where bcg_key = #{param1} and bcm_num = #{param2} and bcq_content = #{param3} and bcq_date = #{param4}
+	</update>
+	
+</mapper>

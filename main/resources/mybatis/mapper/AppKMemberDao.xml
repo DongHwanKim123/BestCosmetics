@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        
+<mapper namespace="com.study.springboot.member.dao.wjapp.AppKMemberDao">
+	<select id="AppPwCheck" resultType="string">
+		select bcm_pw from bc_member where bcm_id = #{param1}
+	</select>
+	<select id="getMemberInfo" resultType="com.study.springboot.member.dto.MemberDto">
+		select * from bc_member where bcm_id = #{param1}
+	</select>
+	<insert id="createAppMemberAccount">
+		INSERT INTO BC_MEMBER
+            (BCM_NUM , BCM_ID , BCM_PW , BCM_NAME , BCM_EMAIL, BCM_GOOGLEID, BCM_NAVERID, BCM_KAKAOID, BCM_FACEBOOKID,
+             BCM_ZIPCODE,BCM_ADDRESS1,BCM_ADDRESS2,BCM_ADDRESS3,BCM_PHONENUM1,BCM_PHONENUM2,BCM_PHONENUM3,
+             BCM_AUTHORITY,BCM_ENABLE,BCM_JOINED_ON,BCM_STOPDATE)
+            VALUES ( BCM_NUM_SEQ.NEXTVAL , #{param1} , #{param2} , #{param3} , #{param4} , '','','','','','','','','','',
+                    '','role_user','true',SYSDATE,SYSDATE)
+	</insert>
+	<select id="orderInfo" resultType="com.study.springboot.member.dto.AppOrderInfo">
+		select COUNT(CASE WHEN bco_order_status='배송준비중' THEN 1 END) as deliveryReady, 
+		    COUNT(CASE WHEN bco_order_status='배송중' THEN 1 END) as inTransit, 
+		    COUNT(CASE WHEN bco_order_status='배송완료' THEN 1 END) as deliveryCompleted 
+		    from bc_order_history where bcm_num = #{param1}
+	</select>
+	<select id="selectOrdernum" resultType="string">
+		select bco_ordernum from bc_order_history where bcm_num = #{param1} and bco_order_status in('배송준비중', '배송중', '배송완료', '구매확정') order by bco_orderdate desc
+	</select>
+	<select id="appOrderList" resultType="com.study.springboot.member.dto.OrderDeliveryDto">
+		SELECT A.*,b.bcg_img FROM 
+		    bc_order_history A, 
+		    (SELECT bco_ordernum, bcg_img FROM 
+		    (SELECT * FROM bc_order_detail where bco_ordernum = #{param1} order by rownum desc)C ,
+		    bc_goods D WHERE c.bcg_key = d.bcg_key and ROWNUM = 1) B where a.bco_ordernum = b.bco_ordernum
+	</select>
+	<select id="selectCEROrdernum" resultType="string">
+		select bco_ordernum from bc_order_history where bcm_num = #{param1} and bco_order_status not in('배송준비중', '배송중', '배송완료', '구매확정') order by bco_orderdate desc
+	</select>
+</mapper>
